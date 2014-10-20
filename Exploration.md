@@ -56,6 +56,6 @@ The above query calculates the sum of the points that each user has received for
 	where posttypeid = 1 and tags like '%<django-orm>%')
     group by p2.OwnerUserId
 
-![Django ORM Response Time](https://github.ncsu.edu/CSC510-Fall2014/Empirical-Trust/raw/master/Response%20Time%20-%20Final.jpg, "Django ORM Response Time")
+![Django ORM Response Time](https://github.ncsu.edu/CSC510-Fall2014/Empirical-Trust/raw/master/Response%20Time%20-%20Final.jpg "Django ORM Response Time")
 
 The above query calculates the average time that each user takes to respond to a question that belongs to *DjangoORM*.
