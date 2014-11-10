@@ -24,29 +24,29 @@ public class JavaGreatAnswerBadge {
 					+ " from JavaPosts j1, JavaPosts j2"
 					+ " where j2.parentId = j1.id"
 					+ " and j1.id IN (select id from JavaPosts where posttypeid = 1 and tags like '%<java>%')"
-					+ " and j2.score >=10"
+					+ " and j2.score >=100"
 					+ " group by j2.OwnerUserId"
 					+ " order by count(j2.id) desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			//double fifteenabove = 0.0;
+			double fifteenabove = 0.0;
 			//double onekabove = 0.0;
-			//int countfifteen = 0;
+			int countfifteen = 0;
 			//int countonek = 0;
 			//int onepc = 1260;
 			while(rs.next())
 			{
-				int temp = 0;
+				int currCount = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				temp = rs.getInt(2);
-				System.out.println(temp);
+				currCount = rs.getInt(2);
+				System.out.println(currCount);
 				count++;
 				/*if(count==onepc)
 				{
 					break;
 				}*/
-				/*if(temp>=100)
+				if(currCount>=10)
 				{
 					countfifteen++;
 				}
@@ -57,11 +57,11 @@ public class JavaGreatAnswerBadge {
 				
 			}
 			System.out.println("Number of Users :"+count);
-			//System.out.println("Number of Users above 100 Accepted Answers : "+countfifteen);
+			System.out.println("Number of Users above 10 Great Answer Badges : "+countfifteen);
 			//System.out.println("Number of Users above 1k : "+countonek);
-			//fifteenabove = (countfifteen/(double)count)*100;
+			fifteenabove = (countfifteen/(double)count)*100;
 			//onekabove = (countonek/count)*100;
-			//System.out.println("Percentage above 100 accepted answers : "+fifteenabove+"%");
+			System.out.println("Percentage above 10 Great Answer Badges : "+fifteenabove+"%");
 			//System.out.println("Percentage above one thousand : "+onekabove+"%");
 			rs.close();
 			stmt.close();

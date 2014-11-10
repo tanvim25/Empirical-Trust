@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class JavaGoldBadge {
+public class JavaResponseTime {
 	
 	public static void main(String args[]) throws Exception
 	{
@@ -20,14 +20,13 @@ public class JavaGoldBadge {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select j2.OwnerUserId, sum(j2.score) as tech_sum, count(j2.id) as ans_count"
+			query = "select p2.owneruserid, avg(datediff(SECOND, p1.creationdate, p2.creationdate)) as average_rtime"
 					+ " from JavaPosts j1, JavaPosts j2"
-					+ " where j1.id in (select id from JavaPosts where PostTypeId = 1 And tags like '%<java>%')"
-					+ " and j2.parentid = j1.Id"
+					+ " where j2.parentId = j1.id"
+					+ " and j1.posttypeid = 1"
+					+ " and j1.tags like '%<java>%'"
 					+ " group by j2.OwnerUserId"
-					+ " having sum(j2.score) >= 1000"
-					+ " and count(j2.id) >= 200"
-					+ " order by sum(j2.score) desc";
+					+ " order by average_rtime desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
@@ -38,22 +37,31 @@ public class JavaGoldBadge {
 			//int onepc = 1260;
 			while(rs.next())
 			{
-				int currCount = 0;
+				double currCount = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				currCount = rs.getInt(2);
+				currCount = rs.getDouble(2);
 				System.out.println(currCount);
 				count++;
 				/*if(count==onepc)
 				{
 					break;
 				}*/
+				/*if(currCount>=50)
+				{
+					countfifteen++;
+				}*/
+				/*if(temp>=1000)
+				{
+					countonek++;
+				}*/
+				
 			}
 			System.out.println("Number of Users :"+count);
-			//System.out.println("Number of Users above 100 Accepted Answers : "+countfifteen);
+			//System.out.println("Number of Users above 50 Good Answer Badges : "+countfifteen);
 			//System.out.println("Number of Users above 1k : "+countonek);
 			//fifteenabove = (countfifteen/(double)count)*100;
 			//onekabove = (countonek/count)*100;
-			//System.out.println("Percentage above 100 accepted answers : "+fifteenabove+"%");
+			//System.out.println("Percentage above 50 Good Answer Badges : "+fifteenabove+"%");
 			//System.out.println("Percentage above one thousand : "+onekabove+"%");
 			rs.close();
 			stmt.close();

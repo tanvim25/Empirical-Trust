@@ -22,36 +22,36 @@ public class JavaTopScorers {
 			String query;
 			query = "select OwnerUserId, Sum(score)"
 					+ " from JavaPosts"
-					+ " where parentid in "
-					+ "(select id from posts where PostTypeId = 1 And tags like '%<java>%')"
+					+ " where parentid in"
+					+ " (select id from posts where PostTypeId = 1 And tags like '%<java>%')"
 					+ " and OwnerUserId is not null"
 					+ " group by OwnerUserId"
 					+ " having sum(score) >= 0"
 					+ " order by Sum(score) desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
-			int count = 0;
-			double fivekabove = 0.0;
-			double onekabove = 0.0;
-			int countfivek = 0;
-			int countonek = 0;
-			int onepc = 1260;
+			int count = 0; //Number of Users
+			double fivekabove = 0.0; //Percentage of Users having points above 5k
+			double onekabove = 0.0; //Percentage of Users having points above 1k
+			int countfivek = 0; //Users having points above 5k
+			int countonek = 0; //Users having points above 1k
+			//int onepc = 1260; //1% of the total number of users assumed initially to be experts
 			while(rs.next())
 			{
-				int temp = 0;
+				int currScore = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				temp = rs.getInt(2);
-				System.out.println(temp);
+				currScore = rs.getInt(2);
+				System.out.println(currScore);
 				count++;
 				/*if(count==onepc)
 				{
 					break;
 				}*/
-				if(temp>=5000)
+				if(currScore>=5000)
 				{
 					countfivek++;
 				}
-				if(temp>=1000)
+				if(currScore>=1000)
 				{
 					countonek++;
 				}

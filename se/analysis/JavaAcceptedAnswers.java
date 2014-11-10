@@ -22,32 +22,31 @@ public class JavaAcceptedAnswers {
 			String query;
 			query = "select OwnerUserId, count(id)"
 					+ " from JavaPosts"
-					+ " where id in "
-					+ "(select acceptedanswerid from posts where PostTypeId = 1 And tags like '%<java>%')"
+					+ " where id in"
+					+ " (select acceptedanswerid from posts where PostTypeId = 1 And tags like '%<java>%')"
 					+ " and OwnerUserId is not null"
 					+ " group by OwnerUserId"
-					+ " having count(id) >= 0"
 					+ " order by count(id) desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			double fifteenabove = 0.0;
-			double onekabove = 0.0;
-			int countfifteen = 0;
-			int countonek = 0;
-			int onepc = 1260;
+			double fifteenabove = 0.0; //Percentage of people having more than 15 accepted answers
+			//double onekabove = 0.0;
+			int countfifteen = 0; //Number of people having more than 15 accepted answers
+			//int countonek = 0;
+			//int onepc = 1260;
 			while(rs.next())
 			{
-				int temp = 0;
+				int currAccept = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				temp = rs.getInt(2);
-				System.out.println(temp);
+				currAccept = rs.getInt(2);
+				System.out.println(currAccept);
 				count++;
 				/*if(count==onepc)
 				{
 					break;
 				}*/
-				if(temp>=100)
+				if(currAccept>=100)
 				{
 					countfifteen++;
 				}
