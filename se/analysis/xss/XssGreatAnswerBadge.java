@@ -15,7 +15,7 @@ public class XssGreatAnswerBadge {
 		{
 			Class.forName("com.mysql.jdbc.Driver");
 			System.out.println("Got Class");
-			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/StackOverflow","root","");
+			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/StackOverflow","root","tiger");
 			System.out.println("Got Connection");
 			stmt = con.createStatement();
 			System.out.println("Got Statement");

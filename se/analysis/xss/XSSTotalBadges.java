@@ -8,10 +8,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import se.analysis.models.UserResponseObject;
+public class XSSTotalBadges {
 
-public class XSSResponseTime {
-	
 	public static void main(String args[]) throws Exception
 	{
 		Connection con = null;
@@ -25,58 +23,52 @@ public class XSSResponseTime {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select userid, avgrtime"
-					+ " from XSSFilteredART"
-					+ " order by avgrtime";
+			query = "select OwnerUserId, sum(no_badges) as TotalNoOfBadges"
+					+ " from AllBadgeInfoXSS"
+					+ " group by OwnerUserId"
+					+ " order by TotalNoOfBadges desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
-			int count = 0;
-			int max = 32;
-			double sumRespTime = 0.0;
-			List<UserResponseObject> scores = new ArrayList<UserResponseObject>(); 
+			int count = 0; //Number of Users
+			int sumScore = 0; //Sum total of all scores
+			List<Integer> scores = new ArrayList<Integer>();
 			while(rs.next())
 			{
+				int currScore = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				System.out.println(rs.getDouble(2));
-				sumRespTime += rs.getDouble(2);
-				scores.add(new UserResponseObject(rs.getInt(1), rs.getDouble(2)));
+				currScore = rs.getInt(2);
+				System.out.println(currScore);
 				count++;
-				if(count==max)
-					break;
+				sumScore += currScore;
 			}
-			System.out.println();
 			System.out.println("Number of Users :"+count);
-			//System.out.println("Sum of all Response Times : "+sumRespTime);
-			double average = sumRespTime/(double)count;
-			System.out.println("Average Response Time : "+average);
+			System.out.println("Sum Total of All Users' Scores : "+sumScore);
+			double average = (double)sumScore/(double)count;
 			
 			//Standard Deviation Logic
-			
 			double variance = 0.0;
 			double stddev = 0.0;
-			Iterator<UserResponseObject> scoreIterator = scores.iterator();
+			Iterator<Integer> scoreIterator = scores.iterator();
 			System.out.println();
 			while(scoreIterator.hasNext())
 			{
-				UserResponseObject currEle = scoreIterator.next();
-				double currAns = currEle.getResptime();
-				double currEleCalc = Math.pow((currAns - average),2);
+				int currScore = scoreIterator.next();
+				double currEleCalc = Math.pow((currScore - average),2);
 				//System.out.println(currEle+"  "+average+"  "+(currEle-average)+"  "+currEleCalc);
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
 			variance = variance/(double)count;
 			stddev = Math.sqrt(variance);
-			System.out.println("Average Response Time : "+average);
+			System.out.println("Average Score : "+average);
 			System.out.println("Standard Deviation : "+stddev);
 			System.out.println();
-			System.out.println("Mean : "+((stddev*0)+average));
+			System.out.println("Mean : "+(int)Math.ceil((stddev*0)+average));
 			int countAtMean = 0;
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				UserResponseObject currEle = scoreIterator.next();
-				if(currEle.getResptime()>=((stddev*0)+average))
+				if(scoreIterator.next()>=(int)Math.ceil((stddev*0)+average))
 				{
 					countAtMean++;
 				}
@@ -84,13 +76,12 @@ public class XSSResponseTime {
 			System.out.println("Number of Users greater than or equal to mean : "+countAtMean);
 			System.out.println("Percentage Remaining : "+((double)countAtMean/(double)count)*100+"%");
 			System.out.println();
-			System.out.println("One Standard Deviation Above Mean : "+((stddev*1)+average));
+			System.out.println("One Standard Deviation Above Mean : "+(int)Math.ceil((stddev*1)+average));
 			int countAtOMean = 0;
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				UserResponseObject currEle = scoreIterator.next();
-				if(currEle.getResptime()>=((stddev*1)+average))
+				if(scoreIterator.next()>=(int)Math.ceil((stddev*1)+average))
 				{
 					countAtOMean++;
 				}
@@ -98,13 +89,12 @@ public class XSSResponseTime {
 			System.out.println("Number of Users greater than or equal to one standard deviation above mean : "+countAtOMean);
 			System.out.println("Percentage Remaining : "+((double)countAtOMean/(double)count)*100+"%");
 			System.out.println();
-			System.out.println("Two Standard Deviations Above Mean : "+((stddev*2)+average));
+			System.out.println("Two Standard Deviations Above Mean : "+(int)Math.ceil((stddev*2)+average));
 			int countAtTwoMean = 0;
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				UserResponseObject currEle = scoreIterator.next();
-				if(currEle.getResptime()>=((stddev*2)+average))
+				if(scoreIterator.next()>=(int)Math.ceil((stddev*2)+average))
 				{
 					countAtTwoMean++;
 				}
@@ -117,8 +107,7 @@ public class XSSResponseTime {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				UserResponseObject currEle = scoreIterator.next();
-				if(currEle.getResptime()>=((stddev*3)+average))
+				if(scoreIterator.next()>=(int)Math.ceil((stddev*3)+average))
 				{
 					countAtThreeMean++;
 				}
@@ -126,34 +115,28 @@ public class XSSResponseTime {
 			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
 			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
 			System.out.println();
-			
-			//Percentage Overlapping
-			query = "SELECT userId from XSSEstimatedExperts";
-			rs = stmt.executeQuery(query);
-			List<Integer>expectedExpert = new ArrayList<Integer>();
-			while(rs.next())
-			{
-				expectedExpert.add(rs.getInt(1));
-			}
-			List<Integer>fastestUsers = new ArrayList<Integer>();
-			scoreIterator = scores.iterator();
+		
+			//Insert Experts Into Table
+			/*scoreIterator = scores.iterator();
+			int currUser = 0;
+			int currScore = 0;
+			int flag = 0;
+			int crec = 0;
 			while(scoreIterator.hasNext())
 			{
-				UserResponseObject currEle = scoreIterator.next();
-				fastestUsers.add(currEle.getUserid());
-			}
-			
-			int overlap = 0;
-			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
-			while(expectedExpertIterator.hasNext())
-			{
-				if(fastestUsers.contains(expectedExpertIterator.next()))
+				UserScoreObject currEle = scoreIterator.next();
+				currUser = currEle.getUserId();
+				currScore = currEle.getScore();
+				if(currScore>=32) //Two SD's Above Mean
 				{
-					overlap++;
+					query = "INSERT INTO XSSEstimatedExperts values ("+currUser+","+currScore+")";
+					flag = stmt.executeUpdate(query);
+					crec++;
 				}
 			}
-			System.out.println("Overlaps : "+overlap);
-				
+			System.out.println();
+			System.out.println("Insert Successfull");
+			System.out.println("Values Inserted : "+crec);*/
 			rs.close();
 			stmt.close();
 			con.close();
@@ -162,6 +145,6 @@ public class XSSResponseTime {
 		{
 			e.printStackTrace();
 		}
+	}
 
-		}
 }
