@@ -4,6 +4,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import se.analysis.models.UserAnswer;
 
 public class XssMaxUpVoteNoAccept {
 	
@@ -31,39 +36,94 @@ public class XssMaxUpVoteNoAccept {
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			double fifteenabove = 0.0;
-			//double onekabove = 0.0;
-			int countfifteen = 0;
-			//int countonek = 0;
-			//int onepc = 1260;
+			int sum = 0;
+			double average = 0.0;
+			List<UserAnswer> answers = new ArrayList<UserAnswer>();
 			while(rs.next())
 			{
 				int currCount = 0;
 				System.out.print(rs.getInt(1)+"\t");
 				currCount = rs.getInt(2);
 				System.out.println(currCount);
+				answers.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
 				count++;
-				/*if(count==onepc)
-				{
-					break;
-				}*/
-				if(currCount>=10)
-				{
-					countfifteen++;
-				}
-				/*if(temp>=1000)
-				{
-					countonek++;
-				}*/
-				
+				sum+=currCount;				
 			}
 			System.out.println("Number of Users :"+count);
-			System.out.println("Number of Users above 10 Answers Having Highest Votes But Not Accepted: "+countfifteen);
-			//System.out.println("Number of Users above 1k : "+countonek);
-			fifteenabove = (countfifteen/(double)count)*100;
-			//onekabove = (countonek/count)*100;
-			System.out.println("Percentage : "+fifteenabove+"%");
-			//System.out.println("Percentage above one thousand : "+onekabove+"%");
+			System.out.println("Sum Total Of Max voted Answers that were not accepted: "+sum);
+			
+			average = (double)sum/(double)count;
+			
+			//Standard Deviation Logic
+			double variance = 0.0;
+			double stddev = 0.0;
+			Iterator<UserAnswer> scoreIterator = answers.iterator();
+			System.out.println();
+			while(scoreIterator.hasNext())
+			{
+				double currEle = (double)scoreIterator.next().getAccptedAnswers();
+				double currEleCalc = Math.pow((currEle - average),2);
+				//System.out.println(currEle+"  "+average+"  "+(currEle-average)+"  "+currEleCalc);
+				variance = variance + currEleCalc;
+				//System.out.println(variance);
+			}
+			variance = variance/(double)count;
+			stddev = Math.sqrt(variance);
+			System.out.println("Average Number of Posts : "+average);
+			System.out.println("Standard Deviation : "+stddev);
+			System.out.println();
+			System.out.println("Mean : "+(int)Math.ceil((stddev*0)+average));
+			int countAtMean = 0;
+			scoreIterator = answers.iterator();
+			while(scoreIterator.hasNext())
+			{
+				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*0)+average))
+				{
+					countAtMean++;
+				}
+			}
+			System.out.println("Number of Users greater than or equal to mean : "+countAtMean);
+			System.out.println("Percentage Remaining : "+((double)countAtMean/(double)count)*100+"%");
+			System.out.println();
+			System.out.println("One Standard Deviation Above Mean : "+(int)Math.ceil((stddev*1)+average));
+			int countAtOMean = 0;
+			scoreIterator = answers.iterator();
+			while(scoreIterator.hasNext())
+			{
+				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*1)+average))
+				{
+					countAtOMean++;
+				}
+			}
+			System.out.println("Number of Users greater than or equal to one standard deviation above mean : "+countAtOMean);
+			System.out.println("Percentage Remaining : "+((double)countAtOMean/(double)count)*100+"%");
+			System.out.println();
+			System.out.println("Two Standard Deviations Above Mean : "+(int)Math.ceil((stddev*2)+average));
+			int countAtTwoMean = 0;
+			scoreIterator = answers.iterator();
+			while(scoreIterator.hasNext())
+			{
+				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*2)+average))
+				{
+					countAtTwoMean++;
+				}
+			}
+			System.out.println("Number of Users greater than or equal to two standard deviations above mean : "+countAtTwoMean);
+			System.out.println("Percentage Remaining : "+((double)countAtTwoMean/(double)count)*100+"%");
+			System.out.println();
+			System.out.println("Three Standard Deviations Above Mean : "+(int)Math.ceil((stddev*3)+average));
+			int countAtThreeMean = 0;
+			scoreIterator = answers.iterator();
+			while(scoreIterator.hasNext())
+			{
+				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*3)+average))
+				{
+					countAtThreeMean++;
+				}
+			}
+			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
+			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
+
 			rs.close();
 			stmt.close();
 			con.close();
