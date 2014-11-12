@@ -25,9 +25,9 @@ public class DjangoNonNormalizedTest {
 			String query;
 			List<Integer> scores = new ArrayList<Integer>();
 			query = "select owneruserid, count(id) as score"
-					+ " from JavaPosts"
-					+ " where parentId IN (select id from JavaPosts where posttypeid =1)"
-					+ " and owneruserid is not null"
+					+ " from XssAnswers"
+					//+ " where parentId IN (select id from JavaPosts where posttypeid =1)"
+					//+ " and owneruserid is not null"
 					+ " group by OwnerUserId"
 					+ " order by score desc";
 			ResultSet rs = stmt.executeQuery(query);
