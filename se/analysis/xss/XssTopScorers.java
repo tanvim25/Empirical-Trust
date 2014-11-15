@@ -63,7 +63,7 @@ public class XssTopScorers {
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
-			variance = variance/(double)count;
+			variance = variance/(double)(count-1);
 			stddev = Math.sqrt(variance);
 			System.out.println("Average Score : "+average);
 			System.out.println("Standard Deviation : "+stddev);
@@ -136,7 +136,7 @@ public class XssTopScorers {
 				UserScoreObject currEle = scoreIterator.next();
 				currUser = currEle.getUserId();
 				currScore = currEle.getScore();
-				if(currScore>=32) //Two SD's Above Mean
+				if(currScore>=18) //Two SD's Above Mean
 				{
 					query = "INSERT INTO XSSEstimatedExperts values ("+currUser+","+currScore+")";
 					flag = stmt.executeUpdate(query);

@@ -34,15 +34,17 @@ public class XssResponseTimeFilter {
 			System.out.println("Got ResultSet");
 			int count = 0;
 			int ansCount = 0;
+			int max = 168;
 			List<UserTimeNumAnsObject> scores = new ArrayList<UserTimeNumAnsObject>();
 			while(rs.next())
 			{
 				System.out.print(rs.getInt(1)+"\t");
-				//System.out.print(rs.getDouble(2)+"\t\t\t");
+				System.out.print(rs.getDouble(2)+"\t\t\t");
 				System.out.println(rs.getInt(3));
 				count++;
 				ansCount += rs.getInt(3);
 				scores.add(new UserTimeNumAnsObject(rs.getInt(1), rs.getDouble(2), rs.getInt(3)));
+				
 			}
 			System.out.println("Number of Users :"+count);
 			System.out.println("Sum of all Posts : "+ansCount);
@@ -125,7 +127,7 @@ public class XssResponseTimeFilter {
 			System.out.println();
 
 			//Insert Experts Into Table
-			/*scoreIterator = scores.iterator();
+			scoreIterator = scores.iterator();
 			int currUser = 0;
 			double currRespTime = 0.0;
 			int currScore = 0;
@@ -136,7 +138,7 @@ public class XssResponseTimeFilter {
 				currUser = currEle.getUserid();
 				currRespTime = currEle.getRespTime();
 				currScore = currEle.getNumAns();
-				if(currScore>=5) //Two SD's Above Mean
+				if(currScore>=4) //Two SD's Above Mean
 				{
 					query = "INSERT INTO XSSFilteredART values ("+currUser+","+currRespTime+","+currScore+")";
 					@SuppressWarnings("unused")
@@ -146,7 +148,7 @@ public class XssResponseTimeFilter {
 			}
 			System.out.println();
 			System.out.println("Insert Successfull");
-			System.out.println("Values Inserted : "+crec);*/
+			System.out.println("Values Inserted : "+crec);
 			
 			rs.close();
 			stmt.close();
