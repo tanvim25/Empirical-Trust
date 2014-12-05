@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import se.analysis.models.UserAnswer;
+import se.analysis.models.UserResponseObject;
 
 public class XssMaxUpVoteNoAccept {
 	
@@ -28,7 +29,6 @@ public class XssMaxUpVoteNoAccept {
 			query = "select x2.OwnerUserId, count(x2.id)"
 					+ " from XSSQuestions x1, XssAnswers x2"
 					+ " where x2.parentid = x1.id"
-					//+ " and j1.id in (select id from JavaPosts where posttypeid = 1 and tags like '%<java>%')"
 					+ " and x2.score = (select max(x3.score) from XssAnswers x3 where x3.parentid=x1.id)"
 					+ " and (x2.id <> x1.AcceptedAnswerId or x1.AcceptedAnswerId is null)"
 					+ " group by x2.OwnerUserId"
@@ -41,18 +41,21 @@ public class XssMaxUpVoteNoAccept {
 			List<UserAnswer> answers = new ArrayList<UserAnswer>();
 			while(rs.next())
 			{
+				
 				int currCount = 0;
 				System.out.print(rs.getInt(1)+"\t");
 				currCount = rs.getInt(2);
+				//if(currCount < 3)
+				//	break;
 				System.out.println(currCount);
 				answers.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
 				count++;
-				sum+=currCount;				
+				sum+=currCount;
 			}
 			System.out.println("Number of Users :"+count);
 			System.out.println("Sum Total Of Max voted Answers that were not accepted: "+sum);
 			
-			average = (double)sum/(double)count;
+			average = (double)sum/(double)(count);
 			
 			//Standard Deviation Logic
 			double variance = 0.0;
@@ -67,7 +70,7 @@ public class XssMaxUpVoteNoAccept {
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
-			variance = variance/(double)count;
+			variance = variance/(double)(count-1);
 			stddev = Math.sqrt(variance);
 			System.out.println("Average Number of Posts : "+average);
 			System.out.println("Standard Deviation : "+stddev);
@@ -124,6 +127,32 @@ public class XssMaxUpVoteNoAccept {
 			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
 			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
 
+			query = "SELECT userId from XSSEstimatedExperts";
+			rs = stmt.executeQuery(query);
+			List<Integer>expectedExpert = new ArrayList<Integer>();
+			while(rs.next())
+			{
+				expectedExpert.add(rs.getInt(1));
+			}
+			List<Integer>mostAccepts = new ArrayList<Integer>();
+			scoreIterator = answers.iterator();
+			while(scoreIterator.hasNext())
+			{
+				UserAnswer currEle = scoreIterator.next();
+				mostAccepts.add(currEle.getUserId());
+			}
+			
+			int overlap = 0;
+			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
+			while(expectedExpertIterator.hasNext())
+			{
+				if(mostAccepts.contains(expectedExpertIterator.next()))
+				{
+					overlap++;
+				}
+			}
+			System.out.println("Overlaps : "+overlap);
+			
 			rs.close();
 			stmt.close();
 			con.close();

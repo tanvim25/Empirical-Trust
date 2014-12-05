@@ -29,7 +29,6 @@ public class XssAcceptedAnswers {
 					+ " from xssanswers"
 					+ " where id in"
 					+ " (select acceptedanswerid from xssquestions)"
-					//+ " and OwnerUserId is not null"
 					+ " group by OwnerUserId"
 					+ " order by count(id) desc";
 			ResultSet rs = stmt.executeQuery(query);
@@ -43,7 +42,9 @@ public class XssAcceptedAnswers {
 				int currAccept = 0;
 				System.out.print(rs.getInt(1)+"\t");
 				currAccept = rs.getInt(2);
-				System.out.println(currAccept);
+				//if(currAccept<3)
+				//	break;
+				System.out.println(currAccept);				
 				acceptedAns.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
 				count++;
 				sum+= currAccept;
@@ -68,7 +69,7 @@ public class XssAcceptedAnswers {
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
-			variance = variance/(double)count;
+			variance = variance/(double)(count-1);
 			stddev = Math.sqrt(variance);
 			System.out.println("Average Number of Posts : "+average);
 			System.out.println("Standard Deviation : "+stddev);
@@ -125,6 +126,32 @@ public class XssAcceptedAnswers {
 			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
 			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
 
+			query = "SELECT userId from XSSEstimatedExperts";
+			rs = stmt.executeQuery(query);
+			List<Integer>expectedExpert = new ArrayList<Integer>();
+			while(rs.next())
+			{
+				expectedExpert.add(rs.getInt(1));
+			}
+			List<Integer>mostAccepts = new ArrayList<Integer>();
+			scoreIterator = acceptedAns.iterator();
+			while(scoreIterator.hasNext())
+			{
+				UserAnswer currEle = scoreIterator.next();
+				mostAccepts.add(currEle.getUserId());
+			}
+			
+			int overlap = 0;
+			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
+			while(expectedExpertIterator.hasNext())
+			{
+				if(mostAccepts.contains(expectedExpertIterator.next()))
+				{
+					overlap++;
+				}
+			}
+			System.out.println("Overlaps : "+overlap);
+			
 			rs.close();
 			stmt.close();
 			con.close();

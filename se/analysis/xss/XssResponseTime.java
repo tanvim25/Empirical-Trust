@@ -27,22 +27,23 @@ public class XSSResponseTime {
 			String query;
 			query = "select userid, avgrtime"
 					+ " from XSSFilteredART"
+					+ " where avgrtime <= 1440"
 					+ " order by avgrtime";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			int max = 32;
+			//int max = 76;
 			double sumRespTime = 0.0;
 			List<UserResponseObject> scores = new ArrayList<UserResponseObject>(); 
 			while(rs.next())
 			{
+				//if(count==max)
+				//	break;
 				System.out.print(rs.getInt(1)+"\t");
 				System.out.println(rs.getDouble(2));
 				sumRespTime += rs.getDouble(2);
 				scores.add(new UserResponseObject(rs.getInt(1), rs.getDouble(2)));
 				count++;
-				if(count==max)
-					break;
 			}
 			System.out.println();
 			System.out.println("Number of Users :"+count);
@@ -152,8 +153,8 @@ public class XSSResponseTime {
 					overlap++;
 				}
 			}
-			System.out.println("Overlaps : "+overlap);
-				
+			System.out.println("Overlaps : "+overlap);	
+			
 			rs.close();
 			stmt.close();
 			con.close();

@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import se.analysis.models.UserBadgesObject;
+import se.analysis.models.UserResponseObject;
+
 public class XSSTotalBadges {
 
 	public static void main(String args[]) throws Exception
@@ -23,7 +26,7 @@ public class XSSTotalBadges {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select OwnerUserId, sum(no_badges) as TotalNoOfBadges"
+			query = "select OwnerUserId, sum(NoOfbadges) as TotalNoOfBadges"
 					+ " from AllBadgeInfoXSS"
 					+ " group by OwnerUserId"
 					+ " order by TotalNoOfBadges desc";
@@ -31,15 +34,21 @@ public class XSSTotalBadges {
 			System.out.println("Got ResultSet");
 			int count = 0; //Number of Users
 			int sumScore = 0; //Sum total of all scores
-			List<Integer> scores = new ArrayList<Integer>();
+			//int max = 51;
+			List<UserBadgesObject> scores = new ArrayList<UserBadgesObject>();
 			while(rs.next())
 			{
 				int currScore = 0;
-				System.out.print(rs.getInt(1)+"\t");
 				currScore = rs.getInt(2);
+				//if(currScore < 2)
+				//	break;
+				System.out.print(rs.getInt(1)+"\t");
 				System.out.println(currScore);
 				count++;
 				sumScore += currScore;
+				scores.add(new UserBadgesObject(rs.getInt(1), rs.getInt(2)));
+				//if(count==max)
+				//	break;
 			}
 			System.out.println("Number of Users :"+count);
 			System.out.println("Sum Total of All Users' Scores : "+sumScore);
@@ -48,17 +57,18 @@ public class XSSTotalBadges {
 			//Standard Deviation Logic
 			double variance = 0.0;
 			double stddev = 0.0;
-			Iterator<Integer> scoreIterator = scores.iterator();
+			Iterator<UserBadgesObject> scoreIterator = scores.iterator();
 			System.out.println();
 			while(scoreIterator.hasNext())
 			{
-				int currScore = scoreIterator.next();
+				UserBadgesObject currEle = scoreIterator.next();
+				int currScore = currEle.getNoOfBadges();
 				double currEleCalc = Math.pow((currScore - average),2);
 				//System.out.println(currEle+"  "+average+"  "+(currEle-average)+"  "+currEleCalc);
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
-			variance = variance/(double)count;
+			variance = variance/(double)(count-1);
 			stddev = Math.sqrt(variance);
 			System.out.println("Average Score : "+average);
 			System.out.println("Standard Deviation : "+stddev);
@@ -68,7 +78,8 @@ public class XSSTotalBadges {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*0)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*0)+average))
 				{
 					countAtMean++;
 				}
@@ -81,7 +92,8 @@ public class XSSTotalBadges {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*1)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*1)+average))
 				{
 					countAtOMean++;
 				}
@@ -94,7 +106,8 @@ public class XSSTotalBadges {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*2)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*2)+average))
 				{
 					countAtTwoMean++;
 				}
@@ -107,7 +120,8 @@ public class XSSTotalBadges {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*3)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*3)+average))
 				{
 					countAtThreeMean++;
 				}
@@ -115,28 +129,33 @@ public class XSSTotalBadges {
 			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
 			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
 			System.out.println();
-		
-			//Insert Experts Into Table
-			/*scoreIterator = scores.iterator();
-			int currUser = 0;
-			int currScore = 0;
-			int flag = 0;
-			int crec = 0;
+			
+			//Percentage Overlapping
+			query = "SELECT userId from XSSEstimatedExperts";
+			rs = stmt.executeQuery(query);
+			List<Integer>expectedExpert = new ArrayList<Integer>();
+			while(rs.next())
+			{
+				expectedExpert.add(rs.getInt(1));
+			}
+			List<Integer>mostBadges = new ArrayList<Integer>();
+			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				UserScoreObject currEle = scoreIterator.next();
-				currUser = currEle.getUserId();
-				currScore = currEle.getScore();
-				if(currScore>=32) //Two SD's Above Mean
+				UserBadgesObject currEle = scoreIterator.next();
+				mostBadges.add(currEle.getUserId());
+			}
+			
+			int overlap = 0;
+			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
+			while(expectedExpertIterator.hasNext())
+			{
+				if(mostBadges.contains(expectedExpertIterator.next()))
 				{
-					query = "INSERT INTO XSSEstimatedExperts values ("+currUser+","+currScore+")";
-					flag = stmt.executeUpdate(query);
-					crec++;
+					overlap++;
 				}
 			}
-			System.out.println();
-			System.out.println("Insert Successfull");
-			System.out.println("Values Inserted : "+crec);*/
+			System.out.println("Overlaps : "+overlap);
 			rs.close();
 			stmt.close();
 			con.close();
