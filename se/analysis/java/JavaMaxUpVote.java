@@ -10,7 +10,7 @@ import java.util.List;
 
 import se.analysis.models.UserAnswer;
 
-public class JavaMaxUpVoteNoAccept {
+public class JavaMaxUpVote {
 	
 	public static void main(String args[]) throws Exception
 	{
@@ -25,9 +25,9 @@ public class JavaMaxUpVoteNoAccept {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select owneruserid, NumberOfMaxUpAnsNoAc"
-					+ " from JavaMaxUpVoteNoAccept"
-					+ " order by NumberOfMaxUpAnsNoAc desc";
+			query = "select owneruserid, NumberOfMaxUpAns"
+					+ " from JavaMaxUpVote"
+					+ " order by NumberOfMaxUpAns desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
@@ -50,19 +50,19 @@ public class JavaMaxUpVoteNoAccept {
 			{
 				expectedExpert.add(rs.getInt(1));
 			}
-			List<Integer>maxUpVotesNoAc = new ArrayList<Integer>();
+			List<Integer>maxUpVotes = new ArrayList<Integer>();
 			Iterator<UserAnswer> scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
 				UserAnswer currEle = scoreIterator.next();
-				maxUpVotesNoAc.add(currEle.getUserId());
+				maxUpVotes.add(currEle.getUserId());
 			}
 			
 			int overlap = 0;
 			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
 			while(expectedExpertIterator.hasNext())
 			{
-				if(maxUpVotesNoAc.contains(expectedExpertIterator.next()))
+				if(maxUpVotes.contains(expectedExpertIterator.next()))
 				{
 					overlap++;
 				}

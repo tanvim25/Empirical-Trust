@@ -1,4 +1,4 @@
-package se.analysis.xss;
+package se.analysis.java;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import se.analysis.models.UserAnswer;
+import se.analysis.models.UserBadgesObject;
 
-public class XssAcceptedAnswers {
+public class JavaTotalBadges {
 
 	public static void main(String args[]) throws Exception
 	{
@@ -25,61 +25,60 @@ public class XssAcceptedAnswers {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select OwnerUserId, count(id)"
-					+ " from xssanswers"
-					+ " where id in"
-					+ " (select acceptedanswerid from xssquestions)"
+			query = "select OwnerUserId, sum(NumberOfbadges) as TotalNoOfBadges"
+					+ " from JavaTotalBadges"
 					+ " group by OwnerUserId"
-					+ " order by count(id) desc";
+					+ " order by TotalNoOfBadges desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
-			int count = 0;
-			int sum = 0;
-			double average = 0.0;
-			List<UserAnswer> acceptedAns = new ArrayList<UserAnswer>();
+			int count = 0; //Number of Users
+			int sumScore = 0; //Sum total of all scores
+			//int max = 203;
+			List<UserBadgesObject> scores = new ArrayList<UserBadgesObject>();
 			while(rs.next())
 			{
-				int currAccept = 0;
-				System.out.print(rs.getInt(1)+"\t");
-				currAccept = rs.getInt(2);
-				if(currAccept<4)
+				int currScore = 0;
+				currScore = rs.getInt(2);
+				if(currScore < 70)
 					break;
-				System.out.println(currAccept);				
-				acceptedAns.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
+				System.out.print(rs.getInt(1)+"\t");
+				System.out.println(currScore);
 				count++;
-				sum+= currAccept;
-				
+				sumScore += currScore;
+				scores.add(new UserBadgesObject(rs.getInt(1), rs.getInt(2)));
+				//if(count==max)
+				//	break;
 			}
-			
 			System.out.println("Number of Users :"+count);
-			System.out.println("Sum Total Of Accepted Answers : "+sum);
-						
-			average = (double)sum/(double)count;
+			System.out.println("Sum Total of All Users' Badges : "+sumScore);
+			double average = (double)sumScore/(double)count;
 			
 			//Standard Deviation Logic
 			double variance = 0.0;
 			double stddev = 0.0;
-			Iterator<UserAnswer> scoreIterator = acceptedAns.iterator();
+			Iterator<UserBadgesObject> scoreIterator = scores.iterator();
 			System.out.println();
 			while(scoreIterator.hasNext())
 			{
-				double currEle = (double)scoreIterator.next().getAccptedAnswers();
-				double currEleCalc = Math.pow((currEle - average),2);
+				UserBadgesObject currEle = scoreIterator.next();
+				int currScore = currEle.getNoOfBadges();
+				double currEleCalc = Math.pow((currScore - average),2);
 				//System.out.println(currEle+"  "+average+"  "+(currEle-average)+"  "+currEleCalc);
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
 			variance = variance/(double)(count-1);
 			stddev = Math.sqrt(variance);
-			System.out.println("Average Number of Posts : "+average);
+			System.out.println("Average Number Of Badges : "+average);
 			System.out.println("Standard Deviation : "+stddev);
 			System.out.println();
 			System.out.println("Mean : "+(int)Math.ceil((stddev*0)+average));
 			int countAtMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*0)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*0)+average))
 				{
 					countAtMean++;
 				}
@@ -89,10 +88,11 @@ public class XssAcceptedAnswers {
 			System.out.println();
 			System.out.println("One Standard Deviation Above Mean : "+(int)Math.ceil((stddev*1)+average));
 			int countAtOMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*1)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*1)+average))
 				{
 					countAtOMean++;
 				}
@@ -102,10 +102,11 @@ public class XssAcceptedAnswers {
 			System.out.println();
 			System.out.println("Two Standard Deviations Above Mean : "+(int)Math.ceil((stddev*2)+average));
 			int countAtTwoMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*2)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*2)+average))
 				{
 					countAtTwoMean++;
 				}
@@ -115,43 +116,45 @@ public class XssAcceptedAnswers {
 			System.out.println();
 			System.out.println("Three Standard Deviations Above Mean : "+(int)Math.ceil((stddev*3)+average));
 			int countAtThreeMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*3)+average))
+				UserBadgesObject currEle = scoreIterator.next();
+				if(currEle.getNoOfBadges()>=(int)Math.ceil((stddev*3)+average))
 				{
 					countAtThreeMean++;
 				}
 			}
 			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
 			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
-
-			query = "SELECT userId from XSSEstimatedExperts";
+			System.out.println();
+			
+			//Percentage Overlapping
+			query = "SELECT owneruserid from JavaTopScorers";
 			rs = stmt.executeQuery(query);
 			List<Integer>expectedExpert = new ArrayList<Integer>();
 			while(rs.next())
 			{
 				expectedExpert.add(rs.getInt(1));
 			}
-			List<Integer>mostAccepts = new ArrayList<Integer>();
-			scoreIterator = acceptedAns.iterator();
+			List<Integer>mostBadges = new ArrayList<Integer>();
+			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				UserAnswer currEle = scoreIterator.next();
-				mostAccepts.add(currEle.getUserId());
+				UserBadgesObject currEle = scoreIterator.next();
+				mostBadges.add(currEle.getUserId());
 			}
 			
 			int overlap = 0;
 			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
 			while(expectedExpertIterator.hasNext())
 			{
-				if(mostAccepts.contains(expectedExpertIterator.next()))
+				if(mostBadges.contains(expectedExpertIterator.next()))
 				{
 					overlap++;
 				}
 			}
 			System.out.println("Overlaps : "+overlap);
-			
 			rs.close();
 			stmt.close();
 			con.close();

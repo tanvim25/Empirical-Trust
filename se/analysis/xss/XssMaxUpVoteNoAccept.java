@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import se.analysis.models.UserAnswer;
-import se.analysis.models.UserResponseObject;
 
 public class XssMaxUpVoteNoAccept {
 	
@@ -45,8 +44,8 @@ public class XssMaxUpVoteNoAccept {
 				int currCount = 0;
 				System.out.print(rs.getInt(1)+"\t");
 				currCount = rs.getInt(2);
-				//if(currCount < 3)
-				//	break;
+				if(currCount < 4)
+					break;
 				System.out.println(currCount);
 				answers.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
 				count++;

@@ -10,8 +10,8 @@ import java.util.List;
 
 import se.analysis.models.UserAnswer;
 
-public class XssAcceptedAnswers {
-
+public class XssMaxUpVote {
+	
 	public static void main(String args[]) throws Exception
 	{
 		Connection con = null;
@@ -25,41 +25,40 @@ public class XssAcceptedAnswers {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select OwnerUserId, count(id)"
-					+ " from xssanswers"
-					+ " where id in"
-					+ " (select acceptedanswerid from xssquestions)"
-					+ " group by OwnerUserId"
-					+ " order by count(id) desc";
+			query = "select x2.OwnerUserId, count(x2.id)"
+					+ " from XSSQuestions x1, XssAnswers x2"
+					+ " where x2.parentid = x1.id"
+					+ " and x2.score = (select max(x3.score) from XssAnswers x3 where x3.parentid=x1.id)"
+					+ " group by x2.OwnerUserId"
+					+ " order by count(x2.id) desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
 			int sum = 0;
 			double average = 0.0;
-			List<UserAnswer> acceptedAns = new ArrayList<UserAnswer>();
+			List<UserAnswer> answers = new ArrayList<UserAnswer>();
 			while(rs.next())
 			{
-				int currAccept = 0;
-				System.out.print(rs.getInt(1)+"\t");
-				currAccept = rs.getInt(2);
-				if(currAccept<4)
-					break;
-				System.out.println(currAccept);				
-				acceptedAns.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
-				count++;
-				sum+= currAccept;
 				
+				int currCount = 0;
+				System.out.print(rs.getInt(1)+"\t");
+				currCount = rs.getInt(2);
+				if(currCount < 6)
+					break;
+				System.out.println(currCount);
+				answers.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
+				count++;
+				sum+=currCount;
 			}
-			
 			System.out.println("Number of Users :"+count);
-			System.out.println("Sum Total Of Accepted Answers : "+sum);
-						
-			average = (double)sum/(double)count;
+			System.out.println("Sum Total Of Max voted Answers that were not accepted: "+sum);
+			
+			average = (double)sum/(double)(count);
 			
 			//Standard Deviation Logic
 			double variance = 0.0;
 			double stddev = 0.0;
-			Iterator<UserAnswer> scoreIterator = acceptedAns.iterator();
+			Iterator<UserAnswer> scoreIterator = answers.iterator();
 			System.out.println();
 			while(scoreIterator.hasNext())
 			{
@@ -76,7 +75,7 @@ public class XssAcceptedAnswers {
 			System.out.println();
 			System.out.println("Mean : "+(int)Math.ceil((stddev*0)+average));
 			int countAtMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = answers.iterator();
 			while(scoreIterator.hasNext())
 			{
 				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*0)+average))
@@ -89,7 +88,7 @@ public class XssAcceptedAnswers {
 			System.out.println();
 			System.out.println("One Standard Deviation Above Mean : "+(int)Math.ceil((stddev*1)+average));
 			int countAtOMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = answers.iterator();
 			while(scoreIterator.hasNext())
 			{
 				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*1)+average))
@@ -102,7 +101,7 @@ public class XssAcceptedAnswers {
 			System.out.println();
 			System.out.println("Two Standard Deviations Above Mean : "+(int)Math.ceil((stddev*2)+average));
 			int countAtTwoMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = answers.iterator();
 			while(scoreIterator.hasNext())
 			{
 				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*2)+average))
@@ -115,7 +114,7 @@ public class XssAcceptedAnswers {
 			System.out.println();
 			System.out.println("Three Standard Deviations Above Mean : "+(int)Math.ceil((stddev*3)+average));
 			int countAtThreeMean = 0;
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = answers.iterator();
 			while(scoreIterator.hasNext())
 			{
 				if(scoreIterator.next().getAccptedAnswers()>=(int)Math.ceil((stddev*3)+average))
@@ -134,7 +133,7 @@ public class XssAcceptedAnswers {
 				expectedExpert.add(rs.getInt(1));
 			}
 			List<Integer>mostAccepts = new ArrayList<Integer>();
-			scoreIterator = acceptedAns.iterator();
+			scoreIterator = answers.iterator();
 			while(scoreIterator.hasNext())
 			{
 				UserAnswer currEle = scoreIterator.next();
@@ -161,5 +160,4 @@ public class XssAcceptedAnswers {
 			e.printStackTrace();
 		}
 	}
-
 }
