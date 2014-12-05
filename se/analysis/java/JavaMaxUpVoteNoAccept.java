@@ -1,12 +1,12 @@
-package se.analysis;
+package se.analysis.java;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class JavaAcceptedAnswers {
-
+public class JavaMaxUpVoteNoAccept {
+	
 	public static void main(String args[]) throws Exception
 	{
 		Connection con = null;
@@ -20,33 +20,34 @@ public class JavaAcceptedAnswers {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select OwnerUserId, count(id)"
-					+ " from JavaPosts"
-					+ " where id in"
-					+ " (select acceptedanswerid from posts where PostTypeId = 1 And tags like '%<java>%')"
-					+ " and OwnerUserId is not null"
-					+ " group by OwnerUserId"
-					+ " order by count(id) desc";
+			query = "select j2.OwnerUserId, count(j2.id)"
+					+ " from JavaQuestions j1, JavaAnswers j2"
+					+ " where j2.parentid = j1.id"
+					//+ " and j1.id in (select id from JavaPosts where posttypeid = 1 and tags like '%<java>%')"
+					+ " and j2.score = (select max(j3.score) from JavaAnswers j3 where j3.parentid=j1.id)"
+					+ " and (j2.id <> j1.AcceptedAnswerId or j1.AcceptedAnswerId is null)"
+					+ " group by j2.OwnerUserId"
+					+ " order by count(j2.id) desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			double fifteenabove = 0.0; //Percentage of people having more than 15 accepted answers
+			double fifteenabove = 0.0;
 			//double onekabove = 0.0;
-			int countfifteen = 0; //Number of people having more than 15 accepted answers
+			int countfifteen = 0;
 			//int countonek = 0;
 			//int onepc = 1260;
 			while(rs.next())
 			{
-				int currAccept = 0;
+				int currCount = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				currAccept = rs.getInt(2);
-				System.out.println(currAccept);
+				currCount = rs.getInt(2);
+				System.out.println(currCount);
 				count++;
 				/*if(count==onepc)
 				{
 					break;
 				}*/
-				if(currAccept>=100)
+				if(currCount>=10)
 				{
 					countfifteen++;
 				}
@@ -57,11 +58,11 @@ public class JavaAcceptedAnswers {
 				
 			}
 			System.out.println("Number of Users :"+count);
-			System.out.println("Number of Users above 100 Accepted Answers : "+countfifteen);
+			System.out.println("Number of Users above 10 Answers Having Highest Votes But Not Accepted: "+countfifteen);
 			//System.out.println("Number of Users above 1k : "+countonek);
 			fifteenabove = (countfifteen/(double)count)*100;
 			//onekabove = (countonek/count)*100;
-			System.out.println("Percentage above 100 accepted answers : "+fifteenabove+"%");
+			System.out.println("Percentage : "+fifteenabove+"%");
 			//System.out.println("Percentage above one thousand : "+onekabove+"%");
 			rs.close();
 			stmt.close();
@@ -72,5 +73,4 @@ public class JavaAcceptedAnswers {
 			e.printStackTrace();
 		}
 	}
-
 }

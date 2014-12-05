@@ -1,4 +1,4 @@
-package se.testfiles;
+package se.analysis.xss;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class DjangoNonNormalizedTest {
+import se.analysis.models.UserScoreObject;
+
+public class XssTopScorers {
 	
 	public static void main(String args[]) throws Exception
 	{
@@ -23,49 +25,47 @@ public class DjangoNonNormalizedTest {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			List<Integer> scores = new ArrayList<Integer>();
-			query = "select owneruserid, count(id) as score"
-					+ " from XssAnswers"
-					//+ " where parentId IN (select id from JavaPosts where posttypeid =1)"
-					//+ " and owneruserid is not null"
+			query = "select OwnerUserId, Sum(score)"
+					+ " from xssanswers"
 					+ " group by OwnerUserId"
-					+ " order by score desc";
+					+ " having sum(score) >= 0"
+					+ " order by Sum(score) desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
-			int count = 0;
-			int sum = 0;
-			double average = 0.0;
+			int count = 0; //Number of Users
+			int sumScore = 0; //Sum total of all scores
+			List<UserScoreObject> scores = new ArrayList<UserScoreObject>();
 			while(rs.next())
 			{
-				int currAns = 0;
+				int currScore = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				System.out.println(rs.getInt(2));
-				currAns = rs.getInt(2);
-				sum = sum + currAns;
-				scores.add(currAns);
-				count++;				
+				currScore = rs.getInt(2);
+				System.out.println(currScore);
+				count++;
+				sumScore += currScore;
+				scores.add(new UserScoreObject(rs.getInt(1),currScore));
 			}
 			System.out.println("Number of Users :"+count);
-			System.out.println("Sum Total Of All Posts : "+sum);
-						
-			average = (double)sum/(double)count;
+			System.out.println("Sum Total of All Users' Scores : "+sumScore);
+			double average = (double)sumScore/(double)count;
 			
 			//Standard Deviation Logic
 			double variance = 0.0;
 			double stddev = 0.0;
-			Iterator<Integer> scoreIterator = scores.iterator();
+			Iterator<UserScoreObject> scoreIterator = scores.iterator();
 			System.out.println();
 			while(scoreIterator.hasNext())
 			{
-				double currEle = (double)scoreIterator.next();
-				double currEleCalc = Math.pow((currEle - average),2);
+				UserScoreObject currEle = (UserScoreObject)scoreIterator.next();
+				int currScore = currEle.getScore();
+				double currEleCalc = Math.pow((currScore - average),2);
 				//System.out.println(currEle+"  "+average+"  "+(currEle-average)+"  "+currEleCalc);
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
-			variance = variance/(double)count;
+			variance = variance/(double)(count-1);
 			stddev = Math.sqrt(variance);
-			System.out.println("Average Number of Posts : "+average);
+			System.out.println("Average Score : "+average);
 			System.out.println("Standard Deviation : "+stddev);
 			System.out.println();
 			System.out.println("Mean : "+(int)Math.ceil((stddev*0)+average));
@@ -73,7 +73,8 @@ public class DjangoNonNormalizedTest {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*0)+average))
+				UserScoreObject currEle = scoreIterator.next();
+				if(currEle.getScore()>=(int)Math.ceil((stddev*0)+average))
 				{
 					countAtMean++;
 				}
@@ -86,7 +87,8 @@ public class DjangoNonNormalizedTest {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*1)+average))
+				UserScoreObject currEle = scoreIterator.next();
+				if(currEle.getScore()>=(int)Math.ceil((stddev*1)+average))
 				{
 					countAtOMean++;
 				}
@@ -99,7 +101,8 @@ public class DjangoNonNormalizedTest {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*2)+average))
+				UserScoreObject currEle = scoreIterator.next();
+				if(currEle.getScore()>=(int)Math.ceil((stddev*2)+average))
 				{
 					countAtTwoMean++;
 				}
@@ -112,7 +115,8 @@ public class DjangoNonNormalizedTest {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*3)+average))
+				UserScoreObject currEle = scoreIterator.next();
+				if(currEle.getScore()>=(int)Math.ceil((stddev*3)+average))
 				{
 					countAtThreeMean++;
 				}
@@ -120,6 +124,28 @@ public class DjangoNonNormalizedTest {
 			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
 			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
 			System.out.println();
+		
+			//Insert Experts Into Table
+			/*scoreIterator = scores.iterator();
+			int currUser = 0;
+			int currScore = 0;
+			int flag = 0;
+			int crec = 0;
+			while(scoreIterator.hasNext())
+			{
+				UserScoreObject currEle = scoreIterator.next();
+				currUser = currEle.getUserId();
+				currScore = currEle.getScore();
+				if(currScore>=18) //Two SD's Above Mean
+				{
+					query = "INSERT INTO XSSEstimatedExperts values ("+currUser+","+currScore+")";
+					flag = stmt.executeUpdate(query);
+					crec++;
+				}
+			}
+			System.out.println();
+			System.out.println("Insert Successfull");
+			System.out.println("Values Inserted : "+crec);*/
 			rs.close();
 			stmt.close();
 			con.close();
@@ -129,4 +155,5 @@ public class DjangoNonNormalizedTest {
 			e.printStackTrace();
 		}
 	}
+
 }

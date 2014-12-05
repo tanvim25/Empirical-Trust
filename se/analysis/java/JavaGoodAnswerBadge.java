@@ -1,12 +1,12 @@
-package se.analysis;
+package se.analysis.java;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class JavaEnlightenedBadge {
-	
+public class JavaGoodAnswerBadge {
+
 	public static void main(String args[]) throws Exception
 	{
 		Connection con = null;
@@ -20,17 +20,13 @@ public class JavaEnlightenedBadge {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select j2.OwnerUserId, count(j2.id)"
-					+ " from JavaPosts j1, JavaPosts j2"
-					//+ " where j1.id in (select id from JavaPosts where posttypeid = 1 and tags like '%<java>%'"
-					+ " and j2.parentId = j1.id"
-					+ " and j2.score >= 10"
-					+ " and j2.id = j1.acceptedanswerid"
-					+ " and j2.creationdate = (select min(j5.CreationDate) from JavaPosts j5 where j5.ParentId = j1.id)"
-					+ " and (j2.owneruserid <> (select j3.OwnerUserId from JavaPosts j3 where j3.id = j1.Id)"
-					+ " or ((select j4.OwnerUserId from JavaPosts j4 where j4.id = j1.id) is null and j2.owneruserid is not null))"
-					+ " group by j2.OwnerUserId"
-					+ " order by count(j2.id) desc";
+			query = "select OwnerUserId, count(id)"
+					+ " from JavaAnswers"
+					//+ " where j2.parentId = j1.id"
+					//+ " and j1.id IN (select id from JavaPosts where posttypeid = 1 and tags like '%<java>%')"
+					+ " where score >=25"
+					+ " group by OwnerUserId"
+					+ " order by count(id) desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
@@ -50,7 +46,7 @@ public class JavaEnlightenedBadge {
 				{
 					break;
 				}*/
-				if(currCount>=10)
+				if(currCount>=50)
 				{
 					countfifteen++;
 				}
@@ -61,11 +57,11 @@ public class JavaEnlightenedBadge {
 				
 			}
 			System.out.println("Number of Users :"+count);
-			System.out.println("Number of Users above 10 Enlightened Badges : "+countfifteen);
+			System.out.println("Number of Users above 50 Good Answer Badges : "+countfifteen);
 			//System.out.println("Number of Users above 1k : "+countonek);
 			fifteenabove = (countfifteen/(double)count)*100;
 			//onekabove = (countonek/count)*100;
-			System.out.println("Percentage above 10 Enlightened Badges : "+fifteenabove+"%");
+			System.out.println("Percentage above 50 Good Answer Badges : "+fifteenabove+"%");
 			//System.out.println("Percentage above one thousand : "+onekabove+"%");
 			rs.close();
 			stmt.close();
@@ -76,5 +72,4 @@ public class JavaEnlightenedBadge {
 			e.printStackTrace();
 		}
 	}
-
 }

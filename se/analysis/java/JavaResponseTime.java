@@ -1,12 +1,12 @@
-package se.analysis;
+package se.analysis.java;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class JavaGreatAnswerBadge {
-
+public class JavaResponseTime {
+	
 	public static void main(String args[]) throws Exception
 	{
 		Connection con = null;
@@ -20,36 +20,36 @@ public class JavaGreatAnswerBadge {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select j2.OwnerUserId, count(j2.id)"
-					+ " from JavaPosts j1, JavaPosts j2"
+			query = "select j2.owneruserid, avg(datediff(SECOND, j1.creationdate, j2.creationdate)) as average_rtime"
+					+ " from JavaQuestions j1, JavaAnswers j2"
 					+ " where j2.parentId = j1.id"
-					+ " and j1.id IN (select id from JavaPosts where posttypeid = 1 and tags like '%<java>%')"
-					+ " and j2.score >=100"
+					//+ " and j1.posttypeid = 1"
+					//+ " and j1.tags like '%<java>%'"
 					+ " group by j2.OwnerUserId"
-					+ " order by count(j2.id) desc";
+					+ " order by average_rtime desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			double fifteenabove = 0.0;
+			//double fifteenabove = 0.0;
 			//double onekabove = 0.0;
-			int countfifteen = 0;
+			//int countfifteen = 0;
 			//int countonek = 0;
 			//int onepc = 1260;
 			while(rs.next())
 			{
-				int currCount = 0;
+				double currCount = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				currCount = rs.getInt(2);
+				currCount = rs.getDouble(2);
 				System.out.println(currCount);
 				count++;
 				/*if(count==onepc)
 				{
 					break;
 				}*/
-				if(currCount>=10)
+				/*if(currCount>=50)
 				{
 					countfifteen++;
-				}
+				}*/
 				/*if(temp>=1000)
 				{
 					countonek++;
@@ -57,11 +57,11 @@ public class JavaGreatAnswerBadge {
 				
 			}
 			System.out.println("Number of Users :"+count);
-			System.out.println("Number of Users above 10 Great Answer Badges : "+countfifteen);
+			//System.out.println("Number of Users above 50 Good Answer Badges : "+countfifteen);
 			//System.out.println("Number of Users above 1k : "+countonek);
-			fifteenabove = (countfifteen/(double)count)*100;
+			//fifteenabove = (countfifteen/(double)count)*100;
 			//onekabove = (countonek/count)*100;
-			System.out.println("Percentage above 10 Great Answer Badges : "+fifteenabove+"%");
+			//System.out.println("Percentage above 50 Good Answer Badges : "+fifteenabove+"%");
 			//System.out.println("Percentage above one thousand : "+onekabove+"%");
 			rs.close();
 			stmt.close();
@@ -72,5 +72,4 @@ public class JavaGreatAnswerBadge {
 			e.printStackTrace();
 		}
 	}
-
 }

@@ -1,4 +1,4 @@
-package se.analysis;
+package se.analysis.java;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,18 +13,23 @@ public class JavaTopScorers {
 		Statement stmt = null;
 		try
 		{
+//			private static String driver = "com.mysql.jdbc.Driver";
+//			private static String dbName="stackdb";
+//			private static String connectionURL = "jdbc:mysql://localhost:3306/" + dbName;
+//			private static Connection conn = null;
+
 			Class.forName("com.mysql.jdbc.Driver");
 			System.out.println("Got Class");
-			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/StackOverflow","root","tiger");
+			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/schema","root","tiger");
 			System.out.println("Got Connection");
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
 			query = "select OwnerUserId, Sum(score)"
-					+ " from JavaPosts"
-					+ " where parentid in"
-					+ " (select id from posts where PostTypeId = 1 And tags like '%<java>%')"
-					+ " and OwnerUserId is not null"
+					+ " from JavaAnswers"
+					//+ " where parentid in"
+					//+ " (select id from posts where PostTypeId = 1 And tags like '%<java>%')"
+					//+ " and OwnerUserId is not null"
 					+ " group by OwnerUserId"
 					+ " having sum(score) >= 0"
 					+ " order by Sum(score) desc";

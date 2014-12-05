@@ -1,4 +1,4 @@
-package se.testfiles;
+package se.analysis.xss;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class DjangoNonNormalizedTest {
+import se.analysis.models.UserResponseObject;
+
+public class XSSResponseTime {
 	
 	public static void main(String args[]) throws Exception
 	{
@@ -23,57 +25,59 @@ public class DjangoNonNormalizedTest {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			List<Integer> scores = new ArrayList<Integer>();
-			query = "select owneruserid, count(id) as score"
-					+ " from XssAnswers"
-					//+ " where parentId IN (select id from JavaPosts where posttypeid =1)"
-					//+ " and owneruserid is not null"
-					+ " group by OwnerUserId"
-					+ " order by score desc";
+			query = "select userid, avgrtime"
+					+ " from XSSFilteredART"
+					+ " where avgrtime <= 1440"
+					+ " order by avgrtime";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			int sum = 0;
-			double average = 0.0;
+			//int max = 76;
+			double sumRespTime = 0.0;
+			List<UserResponseObject> scores = new ArrayList<UserResponseObject>(); 
 			while(rs.next())
 			{
-				int currAns = 0;
+				//if(count==max)
+				//	break;
 				System.out.print(rs.getInt(1)+"\t");
-				System.out.println(rs.getInt(2));
-				currAns = rs.getInt(2);
-				sum = sum + currAns;
-				scores.add(currAns);
-				count++;				
+				System.out.println(rs.getDouble(2));
+				sumRespTime += rs.getDouble(2);
+				scores.add(new UserResponseObject(rs.getInt(1), rs.getDouble(2)));
+				count++;
 			}
+			System.out.println();
 			System.out.println("Number of Users :"+count);
-			System.out.println("Sum Total Of All Posts : "+sum);
-						
-			average = (double)sum/(double)count;
+			//System.out.println("Sum of all Response Times : "+sumRespTime);
+			double average = sumRespTime/(double)count;
+			System.out.println("Average Response Time : "+average);
 			
 			//Standard Deviation Logic
+			
 			double variance = 0.0;
 			double stddev = 0.0;
-			Iterator<Integer> scoreIterator = scores.iterator();
+			Iterator<UserResponseObject> scoreIterator = scores.iterator();
 			System.out.println();
 			while(scoreIterator.hasNext())
 			{
-				double currEle = (double)scoreIterator.next();
-				double currEleCalc = Math.pow((currEle - average),2);
+				UserResponseObject currEle = scoreIterator.next();
+				double currAns = currEle.getResptime();
+				double currEleCalc = Math.pow((currAns - average),2);
 				//System.out.println(currEle+"  "+average+"  "+(currEle-average)+"  "+currEleCalc);
 				variance = variance + currEleCalc;
 				//System.out.println(variance);
 			}
 			variance = variance/(double)count;
 			stddev = Math.sqrt(variance);
-			System.out.println("Average Number of Posts : "+average);
+			System.out.println("Average Response Time : "+average);
 			System.out.println("Standard Deviation : "+stddev);
 			System.out.println();
-			System.out.println("Mean : "+(int)Math.ceil((stddev*0)+average));
+			System.out.println("Mean : "+((stddev*0)+average));
 			int countAtMean = 0;
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*0)+average))
+				UserResponseObject currEle = scoreIterator.next();
+				if(currEle.getResptime()>=((stddev*0)+average))
 				{
 					countAtMean++;
 				}
@@ -81,12 +85,13 @@ public class DjangoNonNormalizedTest {
 			System.out.println("Number of Users greater than or equal to mean : "+countAtMean);
 			System.out.println("Percentage Remaining : "+((double)countAtMean/(double)count)*100+"%");
 			System.out.println();
-			System.out.println("One Standard Deviation Above Mean : "+(int)Math.ceil((stddev*1)+average));
+			System.out.println("One Standard Deviation Above Mean : "+((stddev*1)+average));
 			int countAtOMean = 0;
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*1)+average))
+				UserResponseObject currEle = scoreIterator.next();
+				if(currEle.getResptime()>=((stddev*1)+average))
 				{
 					countAtOMean++;
 				}
@@ -94,12 +99,13 @@ public class DjangoNonNormalizedTest {
 			System.out.println("Number of Users greater than or equal to one standard deviation above mean : "+countAtOMean);
 			System.out.println("Percentage Remaining : "+((double)countAtOMean/(double)count)*100+"%");
 			System.out.println();
-			System.out.println("Two Standard Deviations Above Mean : "+(int)Math.ceil((stddev*2)+average));
+			System.out.println("Two Standard Deviations Above Mean : "+((stddev*2)+average));
 			int countAtTwoMean = 0;
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*2)+average))
+				UserResponseObject currEle = scoreIterator.next();
+				if(currEle.getResptime()>=((stddev*2)+average))
 				{
 					countAtTwoMean++;
 				}
@@ -112,7 +118,8 @@ public class DjangoNonNormalizedTest {
 			scoreIterator = scores.iterator();
 			while(scoreIterator.hasNext())
 			{
-				if(scoreIterator.next()>=(int)Math.ceil((stddev*3)+average))
+				UserResponseObject currEle = scoreIterator.next();
+				if(currEle.getResptime()>=((stddev*3)+average))
 				{
 					countAtThreeMean++;
 				}
@@ -120,6 +127,34 @@ public class DjangoNonNormalizedTest {
 			System.out.println("Number of Users greater than or equal to three standard deviations above mean : "+countAtThreeMean);
 			System.out.println("Percentage Remaining : "+((double)countAtThreeMean/(double)count)*100+"%");
 			System.out.println();
+			
+			//Percentage Overlapping
+			query = "SELECT userId from XSSEstimatedExperts";
+			rs = stmt.executeQuery(query);
+			List<Integer>expectedExpert = new ArrayList<Integer>();
+			while(rs.next())
+			{
+				expectedExpert.add(rs.getInt(1));
+			}
+			List<Integer>fastestUsers = new ArrayList<Integer>();
+			scoreIterator = scores.iterator();
+			while(scoreIterator.hasNext())
+			{
+				UserResponseObject currEle = scoreIterator.next();
+				fastestUsers.add(currEle.getUserid());
+			}
+			
+			int overlap = 0;
+			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
+			while(expectedExpertIterator.hasNext())
+			{
+				if(fastestUsers.contains(expectedExpertIterator.next()))
+				{
+					overlap++;
+				}
+			}
+			System.out.println("Overlaps : "+overlap);	
+			
 			rs.close();
 			stmt.close();
 			con.close();
@@ -128,5 +163,6 @@ public class DjangoNonNormalizedTest {
 		{
 			e.printStackTrace();
 		}
-	}
+
+		}
 }
