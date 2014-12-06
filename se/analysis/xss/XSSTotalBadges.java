@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import se.analysis.models.UserBadgesObject;
-import se.analysis.models.UserResponseObject;
 
 public class XSSTotalBadges {
 
@@ -40,8 +39,8 @@ public class XSSTotalBadges {
 			{
 				int currScore = 0;
 				currScore = rs.getInt(2);
-				//if(currScore < 2)
-				//	break;
+				if(currScore < 2)
+					break;
 				System.out.print(rs.getInt(1)+"\t");
 				System.out.println(currScore);
 				count++;

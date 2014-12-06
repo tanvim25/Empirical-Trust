@@ -4,9 +4,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import se.analysis.models.UserAnswer;
 
 public class JavaAcceptedAnswers {
-
+	
 	public static void main(String args[]) throws Exception
 	{
 		Connection con = null;
@@ -20,49 +25,50 @@ public class JavaAcceptedAnswers {
 			stmt = con.createStatement();
 			System.out.println("Got Statement");
 			String query;
-			query = "select OwnerUserId, count(id)"
-					+ " from javaanswers"
-					+ " where id in"
-					+ " (select acceptedanswerid from javaquestions)"
-					//+ " and OwnerUserId is not null"
-					+ " group by OwnerUserId"
-					+ " order by count(id) desc";
+			query = "select owneruserid, NoOfAcAns"
+					+ " from JavaAcceptedAnswers"
+					+ " order by NoOfAcAns desc";
 			ResultSet rs = stmt.executeQuery(query);
 			System.out.println("Got ResultSet");
 			int count = 0;
-			double fifteenabove = 0.0; //Percentage of people having more than 15 accepted answers
-			//double onekabove = 0.0;
-			int countfifteen = 0; //Number of people having more than 15 accepted answers
-			//int countonek = 0;
-			//int onepc = 1260;
+			List<UserAnswer> scores = new ArrayList<UserAnswer>();
 			while(rs.next())
 			{
-				int currAccept = 0;
+				int currTotal = 0;
 				System.out.print(rs.getInt(1)+"\t");
-				currAccept = rs.getInt(2);
-				System.out.println(currAccept);
+				currTotal = rs.getInt(2);
+				System.out.println(currTotal);
 				count++;
-				/*if(count==onepc)
-				{
-					break;
-				}*/
-				if(currAccept>=100)
-				{
-					countfifteen++;
-				}
-				/*if(temp>=1000)
-				{
-					countonek++;
-				}*/
-				
+				scores.add(new UserAnswer(rs.getInt(1), rs.getInt(2)));
 			}
 			System.out.println("Number of Users :"+count);
-			System.out.println("Number of Users above 100 Accepted Answers : "+countfifteen);
-			//System.out.println("Number of Users above 1k : "+countonek);
-			fifteenabove = (countfifteen/(double)count)*100;
-			//onekabove = (countonek/count)*100;
-			System.out.println("Percentage above 100 accepted answers : "+fifteenabove+"%");
-			//System.out.println("Percentage above one thousand : "+onekabove+"%");
+			
+			query = "SELECT owneruserid from JavaTopScorers";
+			rs = stmt.executeQuery(query);
+			List<Integer>expectedExpert = new ArrayList<Integer>();
+			while(rs.next())
+			{
+				expectedExpert.add(rs.getInt(1));
+			}
+			List<Integer>mostAccepts = new ArrayList<Integer>();
+			Iterator<UserAnswer> scoreIterator = scores.iterator();
+			while(scoreIterator.hasNext())
+			{
+				UserAnswer currEle = scoreIterator.next();
+				mostAccepts.add(currEle.getUserId());
+			}
+			
+			int overlap = 0;
+			Iterator<Integer> expectedExpertIterator = expectedExpert.iterator();
+			while(expectedExpertIterator.hasNext())
+			{
+				if(mostAccepts.contains(expectedExpertIterator.next()))
+				{
+					overlap++;
+				}
+			}
+			System.out.println("Overlaps : "+overlap);
+		
 			rs.close();
 			stmt.close();
 			con.close();
@@ -72,5 +78,4 @@ public class JavaAcceptedAnswers {
 			e.printStackTrace();
 		}
 	}
-
 }
